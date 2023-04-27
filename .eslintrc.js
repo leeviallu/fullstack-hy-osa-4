@@ -20,6 +20,7 @@ module.exports = {
     'arrow-spacing': [
       'error', { before: true, after: true },
     ],
+    'no-warning-comments': 0,
     'no-console': 0,
   },
 };
