@@ -86,6 +86,33 @@ describe('addition of a new blog', () => {
         expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length);
     });
 });
+describe('removal of a blog', () => {
+    test('succeeds with status code 204', async () => {
+        const blogs = await helper.blogsInDb();
+        const blogToRemove = blogs[0];
+        await api
+            .delete(`/api/blogs/${blogToRemove.id}`)
+            .expect(204);
+
+        const blogsAtEnd = await helper.blogsInDb();
+
+        expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length - 1);
+    });
+});
+
+describe('update of a blog', () => {
+    test('succeeds with status code 201', async () => {
+        const blogs = await helper.blogsInDb();
+        const blogToUpdate = blogs[0];
+        blogToUpdate.likes += 1;
+        await api
+            .put(`/api/blogs/${blogToUpdate.id}`)
+            .send(blogToUpdate)
+            .expect(201);
+        const blogsAtEnd = await helper.blogsInDb();
+        expect(blogsAtEnd[0].likes).toStrictEqual(helper.initialBlogs[0].likes + 1);
+    });
+});
 
 afterAll(async () => {
     await mongoose.connection.close();
