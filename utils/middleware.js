@@ -31,23 +31,30 @@ const errorHandler = (error, request, response, next) => {
     next(error);
 };
 
-const tokenExtractor = async (request, response, next) => {
-    const authorization = await request.get('authorization');
+const getTokenFrom = (request) => {
+    const authorization = request.get('authorization');
     if (authorization && authorization.startsWith('Bearer ')) {
-        const token = authorization.replace('Bearer ', '');
-        request.token = token;
+        return authorization.replace('Bearer ', '');
     }
+    return null;
+};
+
+const tokenExtractor = async (request, response, next) => {
+    request.token = getTokenFrom(request);
     next();
 };
 
 const userExtractor = async (request, response, next) => {
-    const authorization = await request.get('authorization');
-    if (authorization && authorization.startsWith('Bearer ')) {
-        const token = authorization.replace('Bearer ', '');
+    const token = getTokenFrom(request);
+
+    if (token) {
         const decodedToken = jwt.verify(token, process.env.SECRET);
-        const user = await User.findById(decodedToken.id);
-        request.user = user;
+        if (!decodedToken.id) {
+            return response.status(401).json({ error: 'token invalid' });
+        }
+        request.user = await User.findById(decodedToken.id);
     }
+
     next();
 };
 
