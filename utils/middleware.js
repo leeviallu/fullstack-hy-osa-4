@@ -1,4 +1,8 @@
+/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable consistent-return */
+const jwt = require('jsonwebtoken');
 const logger = require('./logger');
+const User = require('../models/user');
 
 const requestLogger = (request, response, next) => {
     logger.info('Method:', request.method);
@@ -27,8 +31,30 @@ const errorHandler = (error, request, response, next) => {
     next(error);
 };
 
+const tokenExtractor = async (request, response, next) => {
+    const authorization = await request.get('authorization');
+    if (authorization && authorization.startsWith('Bearer ')) {
+        const token = authorization.replace('Bearer ', '');
+        request.token = token;
+    }
+    next();
+};
+
+const userExtractor = async (request, response, next) => {
+    const authorization = await request.get('authorization');
+    if (authorization && authorization.startsWith('Bearer ')) {
+        const token = authorization.replace('Bearer ', '');
+        const decodedToken = jwt.verify(token, process.env.SECRET);
+        const user = await User.findById(decodedToken.id);
+        request.user = user;
+    }
+    next();
+};
+
 module.exports = {
     requestLogger,
     unknownEndpoint,
     errorHandler,
+    tokenExtractor,
+    userExtractor,
 };

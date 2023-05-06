@@ -9,7 +9,9 @@ const app = express('app');
 const usersRouter = require('./controllers/users');
 const blogsRouter = require('./controllers/blogs');
 const loginRouter = require('./controllers/login');
-const middleware = require('./utils/middleware');
+const {
+    userExtractor, tokenExtractor, unknownEndpoint, errorHandler,
+} = require('./utils/middleware');
 const logger = require('./utils/logger');
 
 logger.info('connecting to', config.MONGODB_URI);
@@ -22,13 +24,14 @@ mongoose.connect(config.MONGODB_URI)
         logger.error('error connecting to MongoDB:', error.message);
     });
 
+app.use(tokenExtractor);
 app.use(cors());
 app.use(express.json());
 app.use('/api/login', loginRouter);
 app.use('/api/users', usersRouter);
-app.use('/api/blogs', blogsRouter);
+app.use('/api/blogs', userExtractor, blogsRouter);
 
-app.use(middleware.unknownEndpoint);
-app.use(middleware.errorHandler);
+app.use(unknownEndpoint);
+app.use(errorHandler);
 
 module.exports = app;
