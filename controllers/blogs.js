@@ -12,12 +12,12 @@ blogsRouter.get('/', async (request, response) => {
 
 blogsRouter.post('/', async (request, response) => {
     const { body, user } = request;
-
     const blog = new Blog({
         title: body.title,
         author: body.author,
         url: body.url,
         user: user._id,
+        likes: 0,
     });
     const savedBlog = await blog.save();
     user.blogs = user.blogs.concat(savedBlog._id);
